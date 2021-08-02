@@ -1,1 +1,7 @@
-# web_demo_spoznawanje
+# Spóznawanje rěče
+
+Přikład jako web-sĺuẑba.
+
+# Licenca
+
+Hlej dataja "LICENSE".
