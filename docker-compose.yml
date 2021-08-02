@@ -1,0 +1,8 @@
+version: '3'
+services:
+  web_demo_spoznawanje:
+     image: web_demo_spoznawanje:latest
+     restart: always
+     ports:
+       - "443:443"
+
