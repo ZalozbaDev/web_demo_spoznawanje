@@ -74,7 +74,7 @@ RUN mkdir -p /var/www/html/smartlamp && cp dLabPro/bin.release/recognizer /var/w
 
 RUN cd /dLabPro/bin.release/ && cp log_lampa/*.object ../../var/www/html/smartlamp/ && cp log_lampa/adapted/3_20_hsb_adp.gmm ../../var/www/html/smartlamp/
 
-COPY smartlamp/recognizer.sh /var/www/html/smartlamp
+COPY smartlamp/recognizer.* /var/www/html/smartlamp/
 
 ###################################
 # Pages
