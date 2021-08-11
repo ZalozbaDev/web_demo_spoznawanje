@@ -1,7 +1,7 @@
 version: '3'
 services:
-  web_demo_spoznawanje:
-     image: web_demo_spoznawanje:latest
+  web_demo_spoznawanje_wokabulary:
+     image: web_demo_spoznawanje_wokabulary:latest
      restart: always
      ports:
        - "443:443"

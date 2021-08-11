@@ -1,0 +1,26 @@
+LEX: KAK	kak
+LEX: KAJKI	kajki:
+LEX: JE	jE
+LEX: NA	na
+LEX: ČAS	tSas
+LEX: ČASU	tSasU
+LEX: POZDŹE	pOzdSE
+LEX: DIGIDOM	dIgIdOm
+LEX: HOTOWE	hOtOUvE
+
+DLG: (S)	__WAKEUP__ (1)
+DLG: (1)	__SLEEP__ (S)
+
+# grammar rules sleeping
+GRM.S: (S)	<PAU> (S)
+GRM.S: (F)	<PAU> (F)
+GRM.S:  S	DIGIDOM:__WAKEUP__
+
+# grammar rules ACTIVE
+GRM.1: (S) <PAU> (S)
+GRM.1: (F) <PAU> (F)
+GRM.1:	S HOTOWE:__SLEEP__
+GRM.1: (S) :_TELLTIME_ <TIME> (F)
+GRM.1: <TIME> KAK:KAK JE:JE NA:NA ČASU:ČASU
+GRM.1: <TIME> KAK:KAK NA:NA ČASU:ČASU JE:JE
+GRM.1: <TIME> KAK:KAK POZDŹE:POZDŹE JE:JE

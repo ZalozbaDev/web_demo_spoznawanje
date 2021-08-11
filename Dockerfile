@@ -1,8 +1,8 @@
 FROM debian:buster-slim
 MAINTAINER Daniel Sobe <daniel.sobe@sorben.com>
 
-# docker build -t web_demo_spoznawanje .
-# docker build -t web_demo_spoznawanje . --no-cache
+# docker build -t web_demo_spoznawanje_wokabulary .
+# docker build -t web_demo_spoznawanje_wokabulary . --no-cache
 
 RUN apt update
 
@@ -43,13 +43,36 @@ RUN cd dLabPro && git checkout mudralampa_x86
 
 RUN apt install -y libreadline-dev portaudio19-dev
 
-RUN cd dLabPro && make -C programs/recognizer RELEASE
+# build both dlabpro and recognizer (dlabro required for generating vocabularies)
+RUN cd dLabPro && make -C programs/dlabpro RELEASE && make -C programs/recognizer RELEASE
+
+RUN git clone https://github.com/ZalozbaDev/UASR.git UASR
+
+RUN mkdir /dLabPro/bin.release/uasr-data
+COPY uasr-data   /dLabPro/bin.release/uasr-data
+
+# add the tool for rendering grammar and lexicon into a .svg
+RUN apt install -y graphviz
+
+# the acoustic model(s) are taken from a repo, because we are not modifying them here (just repacking)
+RUN git clone https://github.com/ZalozbaDev/db-hsb-asr.git db-hsb-asr
+
+RUN cd db-hsb-asr && git checkout develop && cp -r model ../dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/
+
+# "feainfo.object" is expected at a certain location
+RUN cp /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/adapted/feainfo.object /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/
+
+# generate all vocabularies from provided files
+
+# simple grammar (smart lamp) --> command "rec"
+RUN cd /dLabPro/bin.release/ && export UASR_HOME=$(pwd)/uasr && ./dlabpro ../../UASR/scripts/dlabpro/tools/REC_PACKDATA.xtp rec uasr-data/db-hsb-asr-exp/common/info/lampa.cfg
+
+# dialog-based grammar (example: clock) --> command "dlg"
+RUN cd /dLabPro/bin.release/ && export UASR_HOME=$(pwd)/uasr && ./dlabpro ../../UASR/scripts/dlabpro/tools/REC_PACKDATA.xtp dlg uasr-data/db-hsb-asr-exp/common/info/casnik.cfg
 
 RUN mkdir -p /var/www/html/smartlamp && cp dLabPro/bin.release/recognizer /var/www/html/smartlamp
 
-RUN git clone https://github.com/ZalozbaDev/db-hsb-asr.git db-hsb-asr
-
-RUN cd db-hsb-asr && git checkout develop && cp config/*.object config/*.gmm config/*.cfg ../var/www/html/smartlamp
+RUN cd /dLabPro/bin.release/ && cp log_lampa/*.object ../../var/www/html/smartlamp/ && cp log_lampa/adapted/3_20_hsb_adp.gmm ../../var/www/html/smartlamp/
 
 COPY smartlamp/recognizer.sh /var/www/html/smartlamp
 
