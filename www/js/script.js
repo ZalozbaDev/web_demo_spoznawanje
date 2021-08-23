@@ -189,21 +189,26 @@ let lampa = {
 	getAsrResult : function(res) {
 		var resJson = JSON.parse(res);
 		console.log(resJson);
-		var asrLines = {"cmd":[],"wrd":[],"raw":[]};
+		var asrLines = {"cmd":[],"wrd":[],"raw":[],"dbg":[]};
 		for (var key in resJson.asr) {
 			asrLines.raw.push(resJson.asr[key]);
-			if (resJson.asr[key].indexOf('Result [') == 0) {
-				clean = resJson.asr[key].replace(/Result \[.+?\]\: /, "");
+			if (resJson.asr[key].indexOf('confidence') != 0) {
+				// clean = resJson.asr[key].replace(/Result \[.+?\]\: /, "");
+				// if (cmd = clean.match(/_(.+)_/)) {
+				clean = resJson.asr[key];
 				if (cmd = clean.match(/_(.+)_/)) {
 					asrLines.cmd.push(cmd[1]);
 				} else {
 					asrLines.wrd.push(clean);
 				}
 			}
+			if (resJson.asr[key].indexOf('confidence') == 0) {
+				asrLines.dbg.push(resJson.asr[key]);
+			}
 		};
 		
 		$('.hide-when-recording').show();
-		var dgb = "<br><span>returnVal: " + resJson.error + " / clipId: " + resJson.file + "</span>";
+		var dgb = "<br><span>returnVal: " + resJson.error + " / clipId: " + resJson.file +  " / confidence: " + asrLines.dbg.join(" ") +  "</span>";
 		if (asrLines.cmd.length > 0) {
 			$('h1').html('Lampa je zrozumiła!');
 			$('p.asr-output').html("~ " + asrLines.wrd.join(" ") + " ~<br>" + asrLines.cmd.join(" ") + dgb);

@@ -32,26 +32,44 @@ RUN a2ensite default-ssl
 RUN apt install -y ffmpeg
 
 ###################################
-# Recognition software
+# Recognition software incl grammar compilation / repackaging
 ###################################
 
 RUN apt install -y g++ make git
 
 RUN git clone https://github.com/ZalozbaDev/dLabPro.git dLabPro
 
-RUN cd dLabPro && git checkout mudralampa_x86
+RUN cd dLabPro && git checkout development
 
 RUN apt install -y libreadline-dev portaudio19-dev
 
-RUN cd dLabPro && make -C programs/recognizer RELEASE
+RUN cd dLabPro && make -C programs/dlabpro RELEASE && make -C programs/recognizer RELEASE
 
-RUN mkdir -p /var/www/html/smartlamp && cp dLabPro/bin.release/recognizer /var/www/html/smartlamp
+RUN git clone https://github.com/ZalozbaDev/UASR.git UASR
 
+RUN mkdir /dLabPro/bin.release/uasr-data
+COPY uasr-data   /dLabPro/bin.release/uasr-data
+
+# add the tool for rendering grammar and lexicon into a .svg
+RUN apt install -y graphviz
+
+# the acoustic model(s) are taken from a repo, because we are not modifying them here (just repackaging)
 RUN git clone https://github.com/ZalozbaDev/db-hsb-asr.git db-hsb-asr
 
-RUN cd db-hsb-asr && git checkout develop && cp config/*.object config/*.gmm config/*.cfg ../var/www/html/smartlamp
+RUN cd db-hsb-asr && git checkout develop && cp -r model ../dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/
 
-COPY smartlamp/recognizer.sh /var/www/html/smartlamp
+# "feainfo.object" is expected at a certain location
+RUN cp /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/adapted/feainfo.object /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/
+
+COPY run_generation.sh /dLabPro/bin.release/
+
+RUN cd /dLabPro/bin.release/ && ./run_generation.sh
+
+RUN mkdir -p /var/www/html/smartlamp && cp /dLabPro/bin.release/recognizer /var/www/html/smartlamp
+
+COPY smartlamp/recognizer.* /var/www/html/smartlamp/
+
+RUN cp -r /dLabPro/bin.release/log /var/www/html/smartlamp/
 
 ###################################
 # Pages
@@ -85,9 +103,9 @@ RUN chown -R www-data:www-data /var/www/html/
 RUN apt install -y nano
 
 # remove stuff only required for building container
-RUN apt remove -y --purge g++ make git curl
+# RUN apt remove -y --purge g++ make git curl
 
-RUN apt autoremove -y --purge
+# RUN apt autoremove -y --purge
 
 RUN apt-get clean
 
