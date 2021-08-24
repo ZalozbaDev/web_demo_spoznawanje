@@ -9,7 +9,13 @@ Sćěhowaca software dyrbi so instalować:
 * docker
 * docker-compose (pola Windows so njetrjeba wosebite instalować)
 
-Container twariće na přikład tak:
+Tutón nawod sćahnyće tak:
+
+```console
+git clone https://github.com/ZalozbaDev/web_demo_spoznawanje.git
+```
+
+Container twariće tak (přikład):
 
 ```console
 docker build -t web_demo_spoznawanje .
