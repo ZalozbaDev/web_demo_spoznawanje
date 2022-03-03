@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 MAINTAINER Daniel Sobe <daniel.sobe@sorben.com>
 
 # docker build -t web_demo_spoznawanje .
@@ -32,10 +32,33 @@ RUN a2ensite default-ssl
 RUN apt install -y ffmpeg
 
 ###################################
-# Recognition software incl grammar compilation / repackaging
+# Build WebRTC dependency
 ###################################
 
+# was it really clang that was acting strange?
+
+# RUN apt install -y clang make git
 RUN apt install -y g++ make git
+
+RUN git clone https://github.com/ZalozbaDev/webrtc-audio-processing.git webrtc-audio-processing
+
+RUN apt install -y meson libabsl-dev
+
+RUN cd webrtc-audio-processing && meson . build -Dprefix=$PWD/install && ninja -C build
+
+###################################
+# Build Respeaker USB VAD dependency
+###################################
+
+RUN git clone https://github.com/ZalozbaDev/usb_4_mic_array.git usb_4_mic_array
+
+RUN apt install -y libusb-1.0-0 libusb-1.0-0-dev
+
+RUN cd usb_4_mic_array/cpp/ && chmod 755 build_static.sh && ./build_static.sh
+
+###################################
+# Recognition software incl grammar compilation / repackaging
+###################################
 
 # make it work with a recent development version of dlabpro & recognizer
 RUN git clone https://github.com/ZalozbaDev/dLabPro.git dLabPro
@@ -57,7 +80,9 @@ RUN apt install -y graphviz
 # the acoustic model(s) are taken from a repo, because we are not modifying them here (just repackaging)
 RUN git clone https://github.com/ZalozbaDev/speech_recognition_pretrained_models.git speech_recognition_pretrained_models
 
-RUN mkdir /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/ && cp /speech_recognition_pretrained_models/2022_02_21/*.{hmm,object} /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/
+RUN mkdir /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/ && \
+cp /speech_recognition_pretrained_models/2022_02_21/*.hmm /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/ && \
+cp /speech_recognition_pretrained_models/2022_02_21/*.object /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/
 
 COPY run_generation.sh /dLabPro/bin.release/
 
