@@ -37,15 +37,16 @@ RUN apt install -y ffmpeg
 
 RUN apt install -y g++ make git
 
+# make it work with a recent development version of dlabpro & recognizer
 RUN git clone https://github.com/ZalozbaDev/dLabPro.git dLabPro
-
-RUN cd dLabPro && git checkout development
+RUN cd dLabPro && git checkout 48d94ed0e4b2424922c28aaf81e05d1066883b01
 
 RUN apt install -y libreadline-dev portaudio19-dev
-
 RUN cd dLabPro && make -C programs/dlabpro RELEASE && make -C programs/recognizer RELEASE
 
+# use a fixed version of UASR
 RUN git clone https://github.com/ZalozbaDev/UASR.git UASR
+RUN cd UASR && git checkout 8ff6eb727dc303fff4c5556574caa0dae204a3e6
 
 RUN mkdir /dLabPro/bin.release/uasr-data
 COPY uasr-data   /dLabPro/bin.release/uasr-data
@@ -54,12 +55,9 @@ COPY uasr-data   /dLabPro/bin.release/uasr-data
 RUN apt install -y graphviz
 
 # the acoustic model(s) are taken from a repo, because we are not modifying them here (just repackaging)
-RUN git clone https://github.com/ZalozbaDev/db-hsb-asr.git db-hsb-asr
+RUN git clone https://github.com/ZalozbaDev/speech_recognition_pretrained_models.git speech_recognition_pretrained_models
 
-RUN cd db-hsb-asr && git checkout develop && cp -r model ../dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/
-
-# "feainfo.object" is expected at a certain location
-RUN cp /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/adapted/feainfo.object /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/
+RUN mkdir /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/ && cp /speech_recognition_pretrained_models/2022_02_21/*.{hmm,object} /dLabPro/bin.release/uasr-data/db-hsb-asr-exp/common/model/
 
 COPY run_generation.sh /dLabPro/bin.release/
 
